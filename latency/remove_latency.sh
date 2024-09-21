@@ -1,0 +1,1 @@
+curl -XDELETE http://localhost:8474/proxies/wiremock/toxics/latency_downstream

@@ -1,93 +1,163 @@
-# was
+# Workshop Async Profiler
 
+Welcome to this workshop to discover the power of [async-profiler](https://github.com/async-profiler/async-profiler)
+
+## Requirements
+
+> [!WARNNG]
+> async-profiler only works for macos or linux
+
+Here's all the tools you need to have installed of your computer in order to run this workshop:
+
+ - [async-profiler](https://github.com/async-profiler/async-profiler/releases/)
+ - [Java 17+](https://adoptium.net/fr/)
+ - [Docker Compose](https://docs.docker.com/compose/)
+ - [k6](https://k6.io/) (or [Docker](https://docs.docker.com/get-started/get-docker/))
 
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Start the application
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+You are going to run a java application. This application has some dependencies that we will discover later.
 
-## Add your files
+In a terminal, please run this command to start the needed dependencies:
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.com/victor.gallet/was.git
-git branch -M main
-git push -uf origin main
+```sh
+docker compose up
 ```
 
-## Integrate with your tools
+Once it's done, let's start the application:
 
-- [ ] [Set up project integrations](https://gitlab.com/victor.gallet/was/-/settings/integrations)
+```sh
+java -Xmx250m -Xms250m -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:TieredStopAtLevel=1 -jar workshop-async-profiler.jar
+```
 
-## Collaborate with your team
+The application is listening on port 8080.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+Make sure your application is correctly started by running:
 
-## Test and Deploy
+```sh
+curl http://localhost:8080/books
+```
 
-Use the built-in continuous integration in GitLab.
+---
+**NOTE**
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Some explanations about the java parameters:
 
-***
+ - `-Xmx250m` sets the maximum heap size of the JVM to 250 MB.
+ - `-Xms250m` sets the initial (and minimum) heap size of the JVM to 250 MB.
+ - `-XX:+DebugNonSafepoints` this option ensures that the JVM records debug information at all points in the program (not just at safe points). Safe points are specific places in code where the JVM can pause execution for tasks like garbage collection, and this flag is useful for generating more accurate profiling information.
+ - `-XX:+UnlockDiagnosticVMOptions` flag unlocks additional options for diagnosing faults or performance problems with the JVM.
+ - `-XX:TieredStopAtLevel=1` disables intermediate compilation tiers (1, 2, 3). Setting this to 1 limits it to only the first level of compilation. We don't want our JVM to spend too much time into runtime optimization.
+---
 
-# Editing this README
+> When agent is not loaded at JVM startup (by using -agentpath option) it is highly recommended to use -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints JVM flags. Without those flags the profiler will still work correctly but results might be less accurate. For example, without -XX:+DebugNonSafepoints there is a high chance that simple inlined methods will not appear in the profile. When the agent is attached at runtime, CompiledMethodLoad JVMTI event enables debug info, but only for methods compiled after attaching.
+> [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#restrictionslimitations)
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
 
-## Suggestions for a good README
+### Warmup
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+Once the application has started correctly, let's inject some traffics into our application:
 
-## Name
-Choose a self-explaining name for your project.
+```sh
+k6 run k6/warmup.js
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+If k6 is not installed, you can run this script using Docker. You have to replace `localhost` with `host.docker.internal` in the `k6/warmup.js` file.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```sh
+docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run - <k6/warmup.js
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Inspect the warmup file and the k6 report, what can you say?
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## Profiling
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### 🔥 Flamegraph
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+During our journey into profiling, we will generate flamegraphs to inspect our application. Here's a short introduction to flamegraph:
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+A flamegraph is a visualization tool used to analyze performance bottlenecks in software, particularly for profiling CPU usage, memory, or execution time. It represents hierarchical data (like call stacks) in a compact, easy-to-read format, with the aim of showing where an application spends most of its time.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+ - A flamegraph shows the function call hierarchy of a program, with each box representing a function or method in the call stack.
+ - The x-axis represents the total time spent in a program, broken down by different functions. **The width of each box indicates how much time is spent in that particular function**.
+ - The y-axis represents the call stack depth. Functions higher up in the flamegraph were called by functions below them.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Example:
 
-## License
-For open source projects, say how it is licensed.
+![flamegraph example](./images/flamegraph_example.png)
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+How to read it:
+ - `a()` calls `b()` and `h()`
+ - `b()` calls `c()` and so on.
+ - Here we can say `b()` takes more "resources" (CPU, memory, execution time) than `h()`.
+
+Color Code:
+ - 🔴 System (User native)
+ - 🟢 Java
+ - 🟡 C++
+
+You can find more informations about flamegraph in the [Resources](#resources) section.
+
+### Wall-clock profiling
+
+Wall-clock time (also called wall time) is the time it takes to run a block of code. 
+The majority of applications dealing with tiered components like a database, some HTTP or GRPC resources or a message broker (RabbiMQ, Apache Kafka, etc...) for example. In those case, the application spend most of its time on IO, waiting for those externals components to respond.
+
+> -e wall option tells async-profiler to sample all threads equally every given period of time regardless of thread status: Running, Sleeping or Blocked.
+> [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#wall-clock-profiling)
+
+
+### Inject some traffics
+
+During our profiling, we will inject some traffics using k6.
+
+```sh
+k6 run k6/main.js
+```
+
+If k6 is not installed, you can run this script using Docker. You have to replace `localhost` with `host.docker.internal` in the `k6/main.js` file.
+
+
+```sh
+docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run - <k6/main.js
+```
+
+### Our first Flamegraph
+
+Let's run the command during the traffic injection:
+
+```sh
+./asprof -e wall -f wall-1.html <pid>
+```
+async-profiler will sample during 60 seconds.
+
+Open the generated flamegraph into your favorite browser.
+
+## Resources
+
+Here's a list of resources that helped me built this workshop.
+
+- [async-profiler](https://github.com/async-profiler/async-profiler)
+- [jvmperf](https://jvmperf.net/)
+- [Coloring Flame Graphs: Code Hues](https://www.brendangregg.com/blog/2017-07-30/coloring-flamegraphs-code-type.html) by Brendan Gregg
+- [A Guide to async-profiler](https://www.baeldung.com/java-async-profiler) by Anshul Bansal and Eric Martin
+- [USENIX ATC '17: Visualizing Performance with Flame Graphs](https://www.youtube.com/watch?v=D53T1Ejig1Q) by Brendan Gregg
+- [Taming performance issues into the wild: a practical guide to JVM profiling](https://www.youtube.com/watch?v=Cw4nN5L-2vU) by Francesco Nigro, Mario Fusco
+- [[Java][Profiling] Async-profiler - manual by use cases](https://krzysztofslusarski.github.io/2022/12/12/async-manual.html) by Krzysztof Ślusarski
+- [[Java][Profiling][Memory leak] Finding heap memory leaks with Async-profiler](https://krzysztofslusarski.github.io/2022/11/27/async-live.html) by Krzysztof Ślusarski
+- [Java Safepoint and Async Profiling](https://seethawenner.medium.com/java-safepoint-and-async-profiling-cdce0818cd29) by Seetha Wenner
+- 🇫🇷 [Traquer une fuite mémoire : cas d’étude avec Hibernate 5, ne tombez pas dans le IN !](https://www.sfeir.dev/back/traquer-une-fuite-memoire-cas-detude-avec-hibernate-5-ne-tombez-pas-dans-le-in/) by Ling-Chun SO
+- 🇫🇷 [Sous le capot d'une application JVM - Java Flight Recorder / Java Mission Control
+](https://www.youtube.com/watch?v=wa_EtTUx-z0) by Guillaume Darmont
+
+
+
+
+
+
+
