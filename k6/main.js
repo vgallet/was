@@ -2,9 +2,7 @@ export const options = {
     thresholds: {
         // Assert that 99% of requests finish within 1000ms.
         "http_req_duration{books: \"list-books\"}": ["p(99) < 1000"],
-        "http_req_duration{books: \"new-books\"}": ["p(99) < 1000"],
-        "http_req_duration{books: \"authors\"}": ["p(99) < 1000"],
-        "http_req_duration{books: \"author-rating\"}": ["p(99) < 1000"]
+        "http_req_duration{books: \"new-books\"}": ["p(99) < 1000"]
     },
     scenarios: {
         list_books: {

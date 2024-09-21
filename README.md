@@ -112,7 +112,7 @@ The majority of applications dealing with tiered components like a database, som
 > [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#wall-clock-profiling)
 
 
-### Inject some traffics
+#### Inject some traffics
 
 During our profiling, we will inject some traffics using k6.
 
@@ -127,16 +127,112 @@ If k6 is not installed, you can run this script using Docker. You have to replac
 docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run - <k6/main.js
 ```
 
-### Our first Flamegraph
+#### Our first Flamegraph
 
 Let's run the command during the traffic injection:
 
 ```sh
 ./asprof -e wall -f wall-1.html <pid>
 ```
+
 async-profiler will sample during 60 seconds.
 
 Open the generated flamegraph into your favorite browser.
+
+Questions:
+ - How many http requests have been done? 
+ - What is the average duration and p9X?
+ - What is the application doing?
+ - where does the books from the endpoint `books` come from?
+ - where does the books from the endpoint `new-books` come from?
+ - what is taking more time?
+
+ Repeat the whole operation but this time using the option `-t`.
+
+> Wall-clock profiler is most useful in per-thread mode: -t.
+> [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#wall-clock-profiling)
+
+ ```sh
+ ./asprof -e wall -t -f wall-per-thread.html <pid>
+ ```
+
+Questions:
+ - Count the number of Tomcat’s thread.
+
+
+#### Add some latency
+
+Let's inject some latency into the HTTP endpoint called by our application.
+
+```sh
+sh ./latency/add_latency.sh
+```
+
+or
+
+```sh
+curl -s -XPOST -d '{"type" : "latency", "attributes" : {"latency" : 100}}' http://localhost:8474/proxies/wiremock/toxics
+```
+
+It adds 100 milliseconds latency.
+
+Let's repeat the operation of profiling and generate a flamegraph `wall-latency.html`.
+
+In the flamegraph, look for (CRTL+F) the application's endpoints `/books` and `/new-books`. What can you say?
+
+Once you have finished your analysis, remove the latency using:
+
+```sh
+sh ./latency/remove_latency.sh
+```
+
+or
+
+```sh
+curl -XDELETE http://localhost:8474/proxies/wiremock/toxics/latency_downstream
+```
+
+### Memory Profiling
+
+Add a function `authors` to the file `k6/main.js`. It should call the endpoint `/authors`.
+
+```js
+export function authors() {
+   let res = http.get("http://localhost:8080/authors", { tags: { books: "authors" } });
+   // Validate response status
+   check(res, { "status was 200": (r) => r.status == 200 }, { books: "authors" });
+}
+```
+
+Add k6 scenario configuration:
+
+```json
+"http_req_duration{books: \"authors\"}": ["p(99) < 1000"]
+
+authors: {
+   executor: 'per-vu-iterations',
+   exec: 'authors',
+   vus: 200,
+   iterations: 500,
+   maxDuration: '5m',
+}
+```
+
+Let's profile the memory:
+
+```sh
+./asprof -e alloc -f memory.html <pid>
+```
+
+Questions:
+ - Can you spot what is consuming more memory?
+ - Why?
+
+WIP
+
+### CPU Profiling
+
+WIP
 
 ## Resources
 
