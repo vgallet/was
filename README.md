@@ -4,8 +4,8 @@ Welcome to this workshop to discover the power of [async-profiler](https://githu
 
 ## Requirements
 
-> [!WARNNG]
-> async-profiler only works for macos or linux
+WARNING:
+async-profiler only works for macos or linux
 
 Here's all the tools you need to have installed of your computer in order to run this workshop:
 
@@ -250,7 +250,7 @@ Once the application is started, you can run:
 Can you tell what is the instance of `AbstractRequestLoggingFilter`?
 
 <details>
-   <summary><b>Solutions</b></summary>
+   <summary><b>Solution</b></summary>
 
    The memory allocation is due to the bean `CommonsRequestLoggingFilter` created in `WorkshopAsyncProfilerApplication`.
 
