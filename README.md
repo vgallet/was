@@ -4,8 +4,8 @@ Welcome to this workshop to discover the power of [async-profiler](https://githu
 
 ## Requirements
 
-WARNING:
-async-profiler only works for macos or linux
+⚠️ async-profiler only works for macos or linux
+
 
 Here's all the tools you need to have installed of your computer in order to run this workshop:
 
