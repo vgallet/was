@@ -336,7 +336,19 @@ Generate all the flamgraph and analyze the results.
 
 ### Multiple Events
 
+It's possible to profile multiple events at the same time. For example, you can profile CPU, allocations and locks at the same time. You may choose any other execution event instead of CPU, like wall-clock.
 
+**The only outpout format that supports multiple events is JFR**.
+
+Let's profile the application:
+
+```sh
+./asprof -e wall,alloc,lock -f profile.jfr <pid>
+````
+
+Then, you can open the JFR file using [Java Mission Control](https://adoptium.net/fr/jmc/)
+
+![JMC Memory](./images/jmc_memory.png)
 
 ## Resources
 
