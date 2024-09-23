@@ -59,7 +59,7 @@ Some explanations about the java parameters:
 
 ### Warmup
 
-Once the application has started correctly, let's inject some traffics into our application:
+Once the application has started correctly, let's inject some traffic into our application:
 
 ```sh
 k6 run k6/warmup.js
@@ -72,7 +72,7 @@ If k6 is not installed, you can run this script using Docker. You have to replac
 docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run - <k6/warmup.js
 ```
 
-Inspect the warmup file and the k6 report, what can you say?
+Inspect the warmup file and the k6 report. Analyze the results.
 
 
 ## Profiling
@@ -112,9 +112,9 @@ The majority of applications dealing with tiered components like a database, som
 > [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#wall-clock-profiling)
 
 
-#### Inject some traffics
+#### Inject some traffic
 
-During our profiling, we will inject some traffics using k6.
+During our profiling, we will inject some traffic using k6.
 
 ```sh
 k6 run k6/main.js
@@ -228,13 +228,118 @@ Questions:
  - Can you spot what is consuming more memory?
  - Why?
 
-WIP
+#### async-profiler as a Java agent
+
+Right now, we can't find which piece of code created the logging filter. We can assume it's a bean Spring that have been created at the application start up.
+
+> If you need to profile some code as soon as the JVM starts up, instead of using the asprof, it is possible to attach async-profiler as an agent on the command line.
+> [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#launching-as-an-agent)
+
+Stop your java application and launch it with this new parameter:
+
+```sh
+java -agentpath:/path/to/libasyncProfiler.so=start,event="org.springframework.web.filter.AbstractRequestLoggingFilter.<init>" -Xmx250m -Xms250m -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:TieredStopAtLevel=1 -jar workshop-async-profiler.jar
+```
+
+Once the application is started, you can run:
+
+```sh
+./asprof dump <pid>
+```
+
+Can you tell what is the instance of `AbstractRequestLoggingFilter`?
+
+<details>
+   <summary><b>Solutions</b></summary>
+
+   The memory allocation is due to the bean `CommonsRequestLoggingFilter` created in `WorkshopAsyncProfilerApplication`.
+
+   This bean is configured with:
+
+   ```java
+   	loggingFilter.setIncludePayload(true);
+		loggingFilter.setMaxPayloadLength(5 * 1024 * 1024);
+   ```
+
+   For each HTTP requests, an array of 5MB will be created.  
+
+</details>
+
 
 ### CPU Profiling
 
-WIP
+A new endpoint as been developped and deployed. It computes the rating of an author based on all its written books.
+
+Some say it's a heavy CPU consumer, let's find out.
+
+Add this k6 configuration:
+
+```js
+authorratings: {
+   executor: 'per-vu-iterations',
+   exec: 'authorRating',
+   vus: 200,
+   iterations: 500,
+   maxDuration: '5m',
+}
+
+
+export function authorRating() {
+    let authors= ["Madeline Miller","Erin Morgenstern","Tara Westover","Michelle Obama"]
+    const randomIndex = Math.floor(Math.random() * authors.length);
+
+    let res = http.get(`http://host.docker.internal:8080/author/${authors[randomIndex]}/rating`, { tags: { books: "author-rating" } });
+    // Validate response status
+    check(res, { "status was 200": (r) => r.status == 200 }, { books: "author-rating" });
+}
+```
+
+
+You can run:
+
+```sh
+./asprof -e  cpu -f cpu.html <pid>
+```
+
+you can face some issues profiling cpu event:
+
+```sh
+[WARN] Kernel symbols are unavailable due to restrictions. Try
+  sysctl kernel.perf_event_paranoid=1
+  sysctl kernel.kptr_restrict=0
+[WARN] perf_event_open for TID 49766 failed: Permission denied
+```
+
+There is a [dedicated section](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#troubleshooting) to help you troubleshoot this issue.
+
+If changing the configuration is not possible, you may fall back to two options:
+
+`ctimer` profiling mode
+> It is similar to cpu mode, but does not require perf_events support. As a drawback, there will be no kernel stack traces.
+
+```sh
+./asprof -e  cpu -f cpu-ctimer.html <pid>
+```
+
+`itimer` profiling mode.
+> Both cpu and itimer mode measure the CPU time spent by the running threads.
+> itimer mode is based on setitimer(ITIMER_PROF) syscall, which [ideally] generates a signal every given interval of the CPU time consumed by the process.
+> [Clarify samples count between -e cpu and -e itimer](https://github.com/async-profiler/async-profiler/issues/272)
+
+
+```sh
+./asprof -e  cpu -f cpu-itimer.html <pid>
+```
+
+Generate all the flamgraph and analyze the results.
+
+
+### Multiple Events
+
+
 
 ## Resources
+
 
 Here's a list of resources that helped me built this workshop.
 
