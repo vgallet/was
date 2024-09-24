@@ -367,6 +367,7 @@ Here's a list of resources that helped me built this workshop.
 - 🇫🇷 [Traquer une fuite mémoire : cas d’étude avec Hibernate 5, ne tombez pas dans le IN !](https://www.sfeir.dev/back/traquer-une-fuite-memoire-cas-detude-avec-hibernate-5-ne-tombez-pas-dans-le-in/) by Ling-Chun SO
 - 🇫🇷 [Sous le capot d'une application JVM - Java Flight Recorder / Java Mission Control
 ](https://www.youtube.com/watch?v=wa_EtTUx-z0) by Guillaume Darmont
+- 🇫🇷 [Performance et diagnostic - Méthodologie et outils](https://speakerdeck.com/vladislavpernin/performance-et-diagnostic-methodologie-et-outils) by Vladislav Pernin
 
 
 
