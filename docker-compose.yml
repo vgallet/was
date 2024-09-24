@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=user
+      - POSTGRES_DB=postgres
+
+  wiremock:
+    image: "wiremock/wiremock:latest"
+    container_name: my_wiremock
+    ports:
+      - "8090:8080"
+    volumes:
+      - ./mappings:/home/wiremock/mappings
+    entrypoint: [ "/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose" ]
+
+
+  toxiproxy:
+    image: "shopify/toxiproxy"
+    ports:
+      - "8474:8474"
+      - "8100:8080"
+  # We created proxy configuration from another ephermal container
+  toxiproxy-config:
+    image: "shopify/toxiproxy"
+    entrypoint: >
+      sh -c "/go/bin/toxiproxy-cli -h toxiproxy:8474 create wiremock --listen 0.0.0.0:8080 --upstream wiremock:8080;"
