@@ -13,6 +13,7 @@ Here's all the tools you need to have installed of your computer in order to run
  - [Java 17+](https://adoptium.net/fr/)
  - [Docker Compose](https://docs.docker.com/compose/)
  - [k6](https://k6.io/) (or [Docker](https://docs.docker.com/get-started/get-docker/))
+ - [Java Mission Control](https://adoptium.net/fr/jmc/) (optional)
 
 
 ## Getting started
@@ -178,7 +179,11 @@ It adds 100 milliseconds latency.
 
 Let's repeat the operation of profiling and generate a flamegraph `wall-latency.html`.
 
-In the flamegraph, look for (CRTL+F) the application's endpoints `/books` and `/new-books`. What can you say?
+In the flamegraph, look for the application's endpoints `/books` and `/new-books`.
+
+You can use the shortcut CRTL+F to look for or use the magnifying glass 🔎.
+
+What are the main difference with the first flamegraph?
 
 Once you have finished your analysis, remove the latency using:
 
@@ -241,6 +246,9 @@ Stop your java application and launch it with this new parameter:
 java -agentpath:/path/to/libasyncProfiler.so=start,event="org.springframework.web.filter.AbstractRequestLoggingFilter.<init>" -Xmx250m -Xms250m -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:TieredStopAtLevel=1 -jar workshop-async-profiler.jar
 ```
 
+The file `libasyncProfiler.so` can be found in the directory `lib` of the async-profiler.
+
+
 Once the application is started, you can run:
 
 ```sh
@@ -288,7 +296,7 @@ export function authorRating() {
     let authors= ["Madeline Miller","Erin Morgenstern","Tara Westover","Michelle Obama"]
     const randomIndex = Math.floor(Math.random() * authors.length);
 
-    let res = http.get(`http://host.docker.internal:8080/author/${authors[randomIndex]}/rating`, { tags: { books: "author-rating" } });
+    let res = http.get(`http://localhost:8080/author/${authors[randomIndex]}/rating`, { tags: { books: "author-rating" } });
     // Validate response status
     check(res, { "status was 200": (r) => r.status == 200 }, { books: "author-rating" });
 }
@@ -334,7 +342,7 @@ If changing the configuration is not possible, you may fall back to two options:
 Generate all the flamgraph and analyze the results.
 
 
-### Multiple Events
+### Multiple Events (optional)
 
 It's possible to profile multiple events at the same time. For example, you can profile CPU, allocations and locks at the same time. You may choose any other execution event instead of CPU, like wall-clock.
 
