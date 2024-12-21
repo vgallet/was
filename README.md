@@ -66,12 +66,20 @@ Once the application has started correctly, let's inject some traffic into our a
 k6 run k6/warmup.js
 ```
 
-If k6 is not installed, you can run this script using Docker. You have to replace `localhost` with `host.docker.internal` in the `k6/warmup.js` file.
-
+If k6 is not installed, you can run this script using Docker. The base URL can be configured via an environment variable:
 
 ```sh
-docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run - <k6/warmup.js
+docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run -e BASE_URL=http://host.docker.internal:8080 - <k6/warmup.js
 ```
+
+> **Note**: When using Docker on macOS or Windows, `host.docker.internal` is used to access the host from the container. On Linux, the `--add-host` option is required to add this host resolution.
+
+The warmup script will:
+- Run 10 virtual users (VUs)
+- Each VU will execute 20 iterations
+- Call both `/books` and `/new-books` endpoints
+- Verify that 99% of requests complete within 1000ms
+- Maximum execution time is capped at 30 seconds
 
 Inspect the warmup file and the k6 report. Analyze the results.
 
