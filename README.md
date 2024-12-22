@@ -4,6 +4,8 @@ Welcome to this workshop to discover the power of [async-profiler](https://githu
 
 ## Requirements
 
+### Run on your computer
+
 ⚠️ async-profiler only works for macos or linux
 
 
@@ -15,6 +17,11 @@ Here's all the tools you need to have installed of your computer in order to run
  - [k6](https://k6.io/) (or [Docker](https://docs.docker.com/get-started/get-docker/))
  - [Java Mission Control](https://adoptium.net/fr/jmc/) (optional)
 
+### Run on Gitpod
+
+Click on this link to open a working environment usig Gitpod 👇
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://www.gitpod.io/#https://gitlab.com/victor.gallet/was)
 
 ## Getting started
 

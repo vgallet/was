@@ -9,4 +9,3 @@ tasks:
         sudo apt-get install k6
     - command: |
         curl -L https://github.com/async-profiler/async-profiler/releases/download/v3.0/async-profiler-3.0-linux-x64.tar.gz | tar -xz
-    - command: docker compose up
