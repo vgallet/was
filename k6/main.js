@@ -1,3 +1,8 @@
+// The base URL can be provided via an environment variable
+// Default points to localhost:8080
+// Example usage with Docker: -e BASE_URL=http://host.docker.internal:8080
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+
 export const options = {
     thresholds: {
         // Assert that 99% of requests finish within 1000ms.
@@ -33,13 +38,13 @@ export default function () {
 
 
 export function list_books() {
-    let res = http.get("http://localhost:8080/books", { tags: { books: "list-books" } });
+    let res = http.get(`${BASE_URL}/books`, { tags: { books: "list-books" } });
     // Validate response status
     check(res, { "status was 200": (r) => r.status == 200 }, { books: "list-books" });
 }
 
 export function new_books() {
-    let res = http.get("http://localhost:8080/new-books", { tags: { books: "new-books" } });
+    let res = http.get(`${BASE_URL}/new-books`, { tags: { books: "new-books" } });
     // Validate response status
     check(res, { "status was 200": (r) => r.status == 200 }, { books: "new-books" });
 }
