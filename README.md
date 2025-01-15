@@ -73,12 +73,20 @@ Once the application has started correctly, let's inject some traffic into our a
 k6 run k6/warmup.js
 ```
 
-If k6 is not installed, you can run this script using Docker. You have to replace `localhost` with `host.docker.internal` in the `k6/warmup.js` file.
-
+If k6 is not installed, you can run this script using Docker. The base URL can be configured via an environment variable:
 
 ```sh
-docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run - <k6/warmup.js
+docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run -e BASE_URL=http://host.docker.internal:8080 - <k6/warmup.js
 ```
+
+> **Note**: When using Docker on macOS or Windows, `host.docker.internal` is used to access the host from the container. On Linux, the `--add-host` option is required to add this host resolution.
+
+The warmup script will:
+- Run 10 virtual users (VUs)
+- Each VU will execute 20 iterations
+- Call both `/books` and `/new-books` endpoints
+- Verify that 99% of requests complete within 1000ms
+- Maximum execution time is capped at 30 seconds
 
 Inspect the warmup file and the k6 report. Analyze the results.
 
@@ -111,6 +119,23 @@ Color Code:
 
 You can find more informations about flamegraph in the [Resources](#resources) section.
 
+### Finding the application PID
+
+To use async-profiler, we need the PID (Process ID) of our Java application. Here are several ways to find it:
+
+```sh
+# Option 1: Using jps
+jps -l | grep workshop-async-profiler.jar
+
+# Option 2: Using ps
+ps aux | grep workshop-async-profiler.jar
+
+# Option 3: If you know the port (8080 in our case)
+lsof -i :8080
+```
+
+The PID is the number that appears in the first column of the output.
+
 ### Wall-clock profiling
 
 Wall-clock time (also called wall time) is the time it takes to run a block of code. 
@@ -128,11 +153,11 @@ During our profiling, we will inject some traffic using k6.
 k6 run k6/main.js
 ```
 
-If k6 is not installed, you can run this script using Docker. You have to replace `localhost` with `host.docker.internal` in the `k6/main.js` file.
+If k6 is not installed, you can run this script using Docker. The base URL can be configured via an environment variable:
 
 
 ```sh
-docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run - <k6/main.js
+docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run -e BASE_URL=http://host.docker.internal:8080 - <k6/main.js
 ```
 
 #### Our first Flamegraph
@@ -140,6 +165,7 @@ docker run --rm --add-host host.docker.internal:host-gateway -i grafana/k6 run -
 Let's run the command during the traffic injection:
 
 ```sh
+cd /path/to/async-profiler-directory/bin
 ./asprof -e wall -f wall-1.html <pid>
 ```
 
@@ -161,6 +187,7 @@ Questions:
 > [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#wall-clock-profiling)
 
  ```sh
+ cd /path/to/async-profiler-directory/bin
  ./asprof -e wall -t -f wall-per-thread.html <pid>
  ```
 
@@ -171,12 +198,6 @@ Questions:
 #### Add some latency
 
 Let's inject some latency into the HTTP endpoint called by our application.
-
-```sh
-sh ./latency/add_latency.sh
-```
-
-or
 
 ```sh
 curl -s -XPOST -d '{"type" : "latency", "attributes" : {"latency" : 100}}' http://localhost:8474/proxies/wiremock/toxics
@@ -195,12 +216,6 @@ What are the main difference with the first flamegraph?
 Once you have finished your analysis, remove the latency using:
 
 ```sh
-sh ./latency/remove_latency.sh
-```
-
-or
-
-```sh
 curl -XDELETE http://localhost:8474/proxies/wiremock/toxics/latency_downstream
 ```
 
@@ -210,9 +225,9 @@ Add a function `authors` to the file `k6/main.js`. It should call the endpoint `
 
 ```js
 export function authors() {
-   let res = http.get("http://localhost:8080/authors", { tags: { books: "authors" } });
-   // Validate response status
-   check(res, { "status was 200": (r) => r.status == 200 }, { books: "authors" });
+    let res = http.get(`${BASE_URL}/authors`, { tags: { books: "authors" } });
+    // Validate response status
+    check(res, { "status was 200": (r) => r.status == 200 }, { books: "authors" });
 }
 ```
 
@@ -233,6 +248,7 @@ authors: {
 Let's profile the memory:
 
 ```sh
+cd /path/to/async-profiler-directory/bin
 ./asprof -e alloc -f memory.html <pid>
 ```
 
@@ -250,7 +266,7 @@ Right now, we can't find which piece of code created the logging filter. We can 
 Stop your java application and launch it with this new parameter:
 
 ```sh
-java -agentpath:/path/to/libasyncProfiler.so=start,event="org.springframework.web.filter.AbstractRequestLoggingFilter.<init>" -Xmx250m -Xms250m -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:TieredStopAtLevel=1 -jar workshop-async-profiler.jar
+java -agentpath:/path/to/async-profiler-directory/lib/libasyncProfiler.so=start,event="org.springframework.web.filter.AbstractRequestLoggingFilter.<init>" -Xmx250m -Xms250m -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:TieredStopAtLevel=1 -jar workshop-async-profiler.jar
 ```
 
 The file `libasyncProfiler.so` can be found in the directory `lib` of the async-profiler.
@@ -259,6 +275,7 @@ The file `libasyncProfiler.so` can be found in the directory `lib` of the async-
 Once the application is started, you can run:
 
 ```sh
+cd /path/to/async-profiler-directory/bin
 ./asprof dump <pid>
 ```
 
@@ -287,7 +304,7 @@ A new endpoint as been developped and deployed. It computes the rating of an aut
 
 Some say it's a heavy CPU consumer, let's find out.
 
-Add this k6 configuration:
+Add this k6 configuration to the file `k6/main.js`. It should call the endpoint `/authorRating`.
 
 ```js
 authorratings: {
@@ -303,7 +320,7 @@ export function authorRating() {
     let authors= ["Madeline Miller","Erin Morgenstern","Tara Westover","Michelle Obama"]
     const randomIndex = Math.floor(Math.random() * authors.length);
 
-    let res = http.get(`http://localhost:8080/author/${authors[randomIndex]}/rating`, { tags: { books: "author-rating" } });
+    let res = http.get(`${BASE_URL}/author/${authors[randomIndex]}/rating`, { tags: { books: "author-rating" } });
     // Validate response status
     check(res, { "status was 200": (r) => r.status == 200 }, { books: "author-rating" });
 }
@@ -313,6 +330,7 @@ export function authorRating() {
 You can run:
 
 ```sh
+cd /path/to/async-profiler-directory/bin
 ./asprof -e  cpu -f cpu.html <pid>
 ```
 
@@ -333,6 +351,7 @@ If changing the configuration is not possible, you may fall back to two options:
 > It is similar to cpu mode, but does not require perf_events support. As a drawback, there will be no kernel stack traces.
 
 ```sh
+cd /path/to/async-profiler-directory/bin
 ./asprof -e  cpu -f cpu-ctimer.html <pid>
 ```
 
@@ -343,6 +362,7 @@ If changing the configuration is not possible, you may fall back to two options:
 
 
 ```sh
+cd /path/to/async-profiler-directory/bin
 ./asprof -e  cpu -f cpu-itimer.html <pid>
 ```
 
@@ -358,6 +378,7 @@ It's possible to profile multiple events at the same time. For example, you can 
 Let's profile the application:
 
 ```sh
+cd /path/to/async-profiler-directory/bin
 ./asprof -e wall,alloc,lock -f profile.jfr <pid>
 ````
 
