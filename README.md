@@ -62,7 +62,7 @@ Some explanations about the java parameters:
 ---
 
 > When agent is not loaded at JVM startup (by using -agentpath option) it is highly recommended to use -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints JVM flags. Without those flags the profiler will still work correctly but results might be less accurate. For example, without -XX:+DebugNonSafepoints there is a high chance that simple inlined methods will not appear in the profile. When the agent is attached at runtime, CompiledMethodLoad JVMTI event enables debug info, but only for methods compiled after attaching.
-> [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#restrictionslimitations)
+> [README](https://github.com/async-profiler/async-profiler/blob/master/docs/Troubleshooting.md#known-limitations)
 
 
 ### Warmup
@@ -117,7 +117,7 @@ Color Code:
  - 🟢 Java
  - 🟡 C++
 
-You can find more informations about flamegraph in the [Resources](#resources) section.
+You can find more informations about flamegraph in the [Resources](#resources) section and [here](https://github.com/async-profiler/async-profiler/blob/master/docs/FlamegraphInterpretation.md).
 
 ### Finding the application PID
 
@@ -142,7 +142,7 @@ Wall-clock time (also called wall time) is the time it takes to run a block of c
 The majority of applications dealing with tiered components like a database, some HTTP or GRPC resources or a message broker (RabbiMQ, Apache Kafka, etc...) for example. In those case, the application spend most of its time on IO, waiting for those externals components to respond.
 
 > -e wall option tells async-profiler to sample all threads equally every given period of time regardless of thread status: Running, Sleeping or Blocked.
-> [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#wall-clock-profiling)
+> [README](https://github.com/async-profiler/async-profiler/blob/master/docs/ProfilingModes.md#wall-clock-profiling)
 
 
 #### Inject some traffic
@@ -184,7 +184,7 @@ Questions:
  Repeat the whole operation but this time using the option `-t`.
 
 > Wall-clock profiler is most useful in per-thread mode: -t.
-> [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#wall-clock-profiling)
+> [README](https://github.com/async-profiler/async-profiler/blob/master/docs/ProfilingModes.md#wall-clock-profiling)
 
  ```sh
  cd /path/to/async-profiler-directory/bin
@@ -261,7 +261,7 @@ Questions:
 Right now, we can't find which piece of code created the logging filter. We can assume it's a bean Spring that have been created at the application start up.
 
 > If you need to profile some code as soon as the JVM starts up, instead of using the asprof, it is possible to attach async-profiler as an agent on the command line.
-> [README](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#launching-as-an-agent)
+> [README](https://github.com/async-profiler/async-profiler/blob/master/docs/IntegratingAsyncProfiler.md)
 
 Stop your java application and launch it with this new parameter:
 
@@ -289,7 +289,7 @@ Can you tell what is the instance of `AbstractRequestLoggingFilter`?
    This bean is configured with:
 
    ```java
-   	loggingFilter.setIncludePayload(true);
+   	    loggingFilter.setIncludePayload(true);
 		loggingFilter.setMaxPayloadLength(5 * 1024 * 1024);
    ```
 
@@ -324,7 +324,7 @@ export function authorRating() {
     // Validate response status
     check(res, { "status was 200": (r) => r.status == 200 }, { books: "author-rating" });
 }
-```
+```https://github.com/async-profiler/async-profiler/blob/master/docs/IntegratingAsyncProfiler.md#launching-as-an-agent
 
 
 You can run:
@@ -343,7 +343,7 @@ you can face some issues profiling cpu event:
 [WARN] perf_event_open for TID 49766 failed: Permission denied
 ```
 
-There is a [dedicated section](https://github.com/async-profiler/async-profiler?tab=readme-ov-file#troubleshooting) to help you troubleshoot this issue.
+There is a [dedicated section](https://github.com/async-profiler/async-profiler/blob/master/docs/Troubleshooting.md) to help you troubleshoot this issue.
 
 If changing the configuration is not possible, you may fall back to two options:
 
