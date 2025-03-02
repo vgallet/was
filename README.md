@@ -324,7 +324,7 @@ export function authorRating() {
     // Validate response status
     check(res, { "status was 200": (r) => r.status == 200 }, { books: "author-rating" });
 }
-```https://github.com/async-profiler/async-profiler/blob/master/docs/IntegratingAsyncProfiler.md#launching-as-an-agent
+```
 
 
 You can run:
