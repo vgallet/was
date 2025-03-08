@@ -88,8 +88,8 @@ The warmup script will:
 - Verify that 99% of requests complete within 1000ms
 - Maximum execution time is capped at 30 seconds
 
-Inspect the warmup file and the k6 report. Analyze the results.
-
+> [!important]
+> ❓ Inspect the warmup file and the k6 report. Analyze the results.
 
 ## Profiling
 
@@ -173,13 +173,15 @@ async-profiler will sample during 60 seconds.
 
 Open the generated flamegraph into your favorite browser.
 
-Questions:
- - How many http requests have been done? 
- - What is the average duration and p9X?
- - What is the application doing?
- - where does the books from the endpoint `books` come from?
- - where does the books from the endpoint `new-books` come from?
- - what is taking more time?
+> [!important]
+> ❓ Questions:
+> - How many http requests have been done? 
+> - What is the average duration and p9X?
+> - What is the application doing?
+> - where does the books from the endpoint `books` come from?
+> - where does the books from the endpoint `new-books` come from?
+> - what is taking more time?
+
 
  Repeat the whole operation but this time using the option `-t`.
 
@@ -191,9 +193,8 @@ Questions:
  ./asprof -e wall -t -f wall-per-thread.html <pid>
  ```
 
-Questions:
- - Count the number of Tomcat’s thread.
-
+> [!important]
+> ❓ Count the number of Tomcat’s thread.
 
 #### Add some latency
 
@@ -251,10 +252,9 @@ Let's profile the memory:
 cd /path/to/async-profiler-directory/bin
 ./asprof -e alloc -f memory.html <pid>
 ```
+> [!important]
+> ❓ Can you spot what is consuming more memory? Why?
 
-Questions:
- - Can you spot what is consuming more memory?
- - Why?
 
 #### async-profiler as a Java agent
 
@@ -270,7 +270,6 @@ java -agentpath:/path/to/async-profiler-directory/lib/libasyncProfiler.so=start,
 ```
 
 The file `libasyncProfiler.so` can be found in the directory `lib` of the async-profiler.
-
 
 Once the application is started, you can run:
 
@@ -299,6 +298,9 @@ Can you tell what is the instance of `AbstractRequestLoggingFilter`?
 
 
 ### CPU Profiling
+
+> [!tip]
+> Don't forget to restart the application without the java agent. 
 
 A new endpoint as been developped and deployed. It computes the rating of an author based on all its written books.
 
@@ -366,7 +368,9 @@ cd /path/to/async-profiler-directory/bin
 ./asprof -e  cpu -f cpu-itimer.html <pid>
 ```
 
-Generate all the flamgraph and analyze the results.
+> [!important]
+> ❓ Generate all the flamgraph and analyze the results.
+
 
 
 ### Multiple Events (optional)
