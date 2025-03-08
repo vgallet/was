@@ -208,11 +208,10 @@ It adds 100 milliseconds latency.
 
 Let's repeat the operation of profiling and generate a flamegraph `wall-latency.html`.
 
-In the flamegraph, look for the application's endpoints `/books` and `/new-books`.
-
-You can use the shortcut CRTL+F to look for or use the magnifying glass 🔎.
-
-What are the main difference with the first flamegraph?
+> [!important]
+> ❓ In the flamegraph, look for the application's endpoints `/books` and `/new-books`.
+> You can use the shortcut CRTL+F to look for or use the magnifying glass 🔎.
+> What are the main difference with the first flamegraph? Can you explain the differences?
 
 Once you have finished your analysis, remove the latency using:
 
