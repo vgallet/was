@@ -49,6 +49,12 @@ Make sure your application is correctly started by running:
 curl http://localhost:8080/books
 ```
 
+and
+
+```sh
+curl http://localhost:8090/new-books
+```
+
 ---
 **NOTE**
 
