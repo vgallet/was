@@ -359,7 +359,7 @@ If changing the configuration is not possible, you may fall back to two options:
 
 ```sh
 cd /path/to/async-profiler-directory/bin
-./asprof -e  cpu -f cpu-ctimer.html <pid>
+./asprof -e  ctimer -f cpu-ctimer.html <pid>
 ```
 
 `itimer` profiling mode.
@@ -370,7 +370,7 @@ cd /path/to/async-profiler-directory/bin
 
 ```sh
 cd /path/to/async-profiler-directory/bin
-./asprof -e  cpu -f cpu-itimer.html <pid>
+./asprof -e  itimer -f cpu-itimer.html <pid>
 ```
 
 > [!important]
