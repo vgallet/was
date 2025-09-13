@@ -17,11 +17,11 @@ Here's all the tools you need to have installed of your computer in order to run
  - [k6](https://k6.io/) (or [Docker](https://docs.docker.com/get-started/get-docker/))
  - [Java Mission Control](https://adoptium.net/fr/jmc/) (optional)
 
-### Run on Gitpod
+### Run on Github Codespaces
 
-Click on this link to open a working environment usig Gitpod 👇
+Create a Github Codespace directly from the repository
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://www.gitpod.io/#https://gitlab.com/victor.gallet/was)
+![codespace](./images/codespaces.png)
 
 ## Getting started
 
