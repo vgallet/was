@@ -11,7 +11,7 @@
 			"installMaven": "false",
 			"installGradle": "false"
 		},
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
+		"ghcr.io/devcontainers/features/docker-in-docker:3": {},
 		"ghcr.io/devcontainers-extra/features/bash-command:1": {},
 		"ghcr.io/devcontainers-extra/features/curl-apt-get:1": {},
 		"ghcr.io/grafana/devcontainer-features/k6:1": {}
